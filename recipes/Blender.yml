@@ -2,16 +2,19 @@ app: Blender
 
 ingredients:
   script:
-    - URL1=$(wget -q "https://www.blender.org/download/" -O - | grep linux-glibc | grep x86_64 | head -n 1 | cut -d '"' -f 94)
-    - URL=$(wget -q "$URL1" -O - | grep tar.bz2 | head -n 1 | cut -d '"' -f 2)
-    - echo "$URL" | cut -d "-" -f 3 > VERSION
+    - BASE_URL="https://download.blender.org/release"
+    - BASE_VERSION=$(wget -q "${BASE_URL}" -O - | grep 'Blender[0-9]' | tail -n1 | grep -o -m1 '[[:digit:]\.]\+' | head -n 1)
+    - VERSION=$(wget -q "${BASE_URL}/Blender${BASE_VERSION}/" -O - | grep -Po '(?<=href=\"blender-)\d\.\d+(\w?|\.\d)(?=\-linux64\.tar\.xz\")' | tail -n 1)
+    - FILENAME=blender-${VERSION}-linux64.tar.xz
+    - URL="${BASE_URL}/Blender${BASE_VERSION}/${FILENAME}"
+    - echo $VERSION > VERSION
     - wget "$URL"
     - mkdir -p blender
-    - tar xf blender*.tar.bz2 -C ./blender --strip-components=1
+    - tar xf ${FILENAME} -C ./blender --strip-components=1
 
 script:
   - cp -r ../blender/* ./usr/bin/;
-  - cp ./usr/bin/icons/scalable/apps/blender.svg .
+  - cp ../blender/blender.svg .
   -
   - cat > blender.desktop <<\EOF
   - [Desktop Entry]
